@@ -1,0 +1,35 @@
+# 🧪 Flutter Testing Strategy
+
+This document outlines the testing strategy and levels used in this Flutter project. It helps ensure clarity on the purpose, scope, and performance expectations of each type of test.
+
+| Test Type           | Annotation / Tool        | Context Scope        | Database               | External Services         | Speed       |
+|---------------------|--------------------------|-----------------------|-------------------------|----------------------------|-------------|
+| **Unit Tests**      | `test` package           | Single function/class | Mocked (`mockito`)      | Mocked (`mockito`)         | ⚡ **Fast**  |
+| **Widget Tests**    | `flutter_test`           | Single widget         | Mocked                  | Mocked                     | 🔄 **Medium** |
+| **Bloc/Cubit Tests**| `bloc_test`              | Bloc/Cubit logic only | In-memory / Mocked      | Mocked                     | ⚡ **Fast**  |
+| **Integration Tests** | `integration_test`     | Full app UI flow      | In-memory / Fake        | Mocked / Stubbed           | 🐌 **Slow**  |
+| **E2E Tests**       | `integration_test` with real backend | Full app + backend | Real / TestContainers   | Real / Sandbox APIs        | 🐌 **Very Slow** |
+
+---
+
+## ✅ Guidelines
+
+- **Unit Tests**: Use for core logic and pure functions. Keep them isolated and fast.
+- **Widget Tests**: Verify UI behavior and interactions. Avoid real dependencies.
+- **Bloc Tests**: Ideal for verifying Bloc/Cubit state transitions under different events.
+- **Integration Tests**: Simulate user flows with real widgets and mock backends.
+- **E2E Tests**: Run on real devices/emulators, use full backend, and simulate actual user scenarios.
+
+---
+
+## 🧰 Tools & Packages
+
+- [`test`](https://pub.dev/packages/test)
+- [`flutter_test`](https://api.flutter.dev/flutter/flutter_test/flutter_test-library.html)
+- [`bloc_test`](https://pub.dev/packages/bloc_test)
+- [`mockito`](https://pub.dev/packages/mockito)
+- [`integration_test`](https://pub.dev/packages/integration_test)
+
+---
+
+> Tip: Keep your fast tests (unit/bloc) running frequently (e.g., pre-commit), and slow tests (integration/e2e) for CI/CD pipelines.
