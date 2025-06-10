@@ -225,6 +225,7 @@ public void GetUserWhenUserNotFoundThrowsNotFoundException()
 - Automated testing must pass 100%
 - Manual testing required for any data-related changes
 
+
 ### Post-Freeze
 - Retrospective on standardization adoption
 - Update templates based on lessons learned
