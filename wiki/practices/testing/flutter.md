@@ -9,37 +9,7 @@ Comprehensive testing standards for Flutter applications, covering unit, widget,
 
 ## Testing Architecture
 
-### Flutter Test Categories
 
-```mermaid
-graph TB
-    subgraph "Flutter Testing Layers"
-        E2E["`integration_test + Real Backend
-        Full App
-        Real DB & Services`"]
-
-        INTEGRATION["`integration_test
-        App UI Flow
-        Mocked Dependencies`"]
-
-        WIDGET["`flutter_test
-        Individual Widgets
-        Mocked Services`"]
-
-        BLOC["`bloc_test
-        Bloc/Cubit State Testing`"]
-
-        UNIT["`test
-        Plain Dart Logic
-        No Flutter Context`"]
-    end
-
-    E2E --> INTEGRATION
-    INTEGRATION --> WIDGET
-    WIDGET --> BLOC
-    BLOC --> UNIT
-
-## 🧪 Flutter Testing Strategy
 | Test Type           | Annotation / Tool        | Context Scope        | Database               | External Services         | Speed       |
 |---------------------|--------------------------|-----------------------|-------------------------|----------------------------|-------------|
 | **Unit Tests**      | `test` package           | Single function/class | Mocked (`mockito`)      | Mocked (`mockito`)         | ⚡ **Fast**  |
