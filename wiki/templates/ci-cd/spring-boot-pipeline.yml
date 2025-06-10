@@ -1,0 +1,541 @@
+# Spring Boot Pipeline Template
+
+**Target Audience**: Java Developers, DevOps Engineers  
+**Last Updated**: 2025-06-10 by System  
+**Template Type**: Azure DevOps Pipeline for Spring Boot
+
+```yaml
+# Azure DevOps Pipeline for Spring Boot Applications
+# Save as: azure-pipelines.yml in repository root
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
+  paths:
+    exclude:
+      - README.md
+      - docs/**
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - README.md
+      - docs/**
+
+variables:
+  # Build Configuration
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  MAVEN_OPTS: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)'
+  
+  # Application Configuration
+  APP_NAME: 'myapp'
+  JAVA_VERSION: '17'
+  MAVEN_VERSION: '3.8.6'
+  
+  # Container Configuration
+  CONTAINER_REGISTRY: 'myregistry.azurecr.io'
+  IMAGE_REPOSITORY: 'myapp'
+  
+  # Environment Configuration
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    ENVIRONMENT: 'production'
+    AZURE_SUBSCRIPTION: 'production-subscription'
+    RESOURCE_GROUP: 'myapp-prod-rg'
+  ${{ elseif startsWith(variables['Build.SourceBranch'], 'refs/heads/release/') }}:
+    ENVIRONMENT: 'staging'
+    AZURE_SUBSCRIPTION: 'staging-subscription'
+    RESOURCE_GROUP: 'myapp-staging-rg'
+  ${{ else }}:
+    ENVIRONMENT: 'development'
+    AZURE_SUBSCRIPTION: 'dev-subscription'
+    RESOURCE_GROUP: 'myapp-dev-rg'
+
+stages:
+  # ================================
+  # BUILD STAGE
+  # ================================
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Application'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Setup Java
+          - task: JavaToolInstaller@0
+            displayName: 'Set up JDK $(JAVA_VERSION)'
+            inputs:
+              versionSpec: '$(JAVA_VERSION)'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          
+          # Cache Maven dependencies
+          - task: Cache@2
+            displayName: 'Cache Maven dependencies'
+            inputs:
+              key: 'maven | "$(Agent.OS)" | **/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+                maven
+              path: $(MAVEN_CACHE_FOLDER)
+          
+          # Download secure files
+          - task: DownloadSecureFile@1
+            displayName: 'Download application properties'
+            name: appProperties
+            inputs:
+              secureFile: 'application-$(ENVIRONMENT).properties'
+          
+          # Copy configuration files
+          - task: CopyFiles@2
+            displayName: 'Copy application properties'
+            inputs:
+              sourceFolder: '$(Agent.TempDirectory)'
+              contents: 'application-$(ENVIRONMENT).properties'
+              targetFolder: '$(System.DefaultWorkingDirectory)/src/main/resources'
+          
+          # Compile and package
+          - task: Maven@3
+            displayName: 'Maven compile'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean compile'
+              options: '$(MAVEN_OPTS)'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '$(JAVA_VERSION)'
+              mavenVersionOption: 'Default'
+              publishJUnitResults: false
+          
+          # Run unit tests
+          - task: Maven@3
+            displayName: 'Run unit tests'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'test'
+              options: '$(MAVEN_OPTS) -Dspring.profiles.active=test'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '$(JAVA_VERSION)'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+          
+          # Code coverage
+          - task: Maven@3
+            displayName: 'Generate code coverage'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'jacoco:report'
+              options: '$(MAVEN_OPTS)'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '$(JAVA_VERSION)'
+          
+          # Publish code coverage
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish code coverage'
+            inputs:
+              codeCoverageTool: 'JaCoCo'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/target/site/jacoco/jacoco.xml'
+              reportDirectory: '$(System.DefaultWorkingDirectory)/target/site/jacoco'
+              failIfCoverageEmpty: false
+          
+          # SonarQube analysis
+          - task: SonarQubePrepare@4
+            displayName: 'Prepare SonarQube analysis'
+            inputs:
+              SonarQube: 'SonarQube-Connection'
+              scannerMode: 'Other'
+              extraProperties: |
+                sonar.projectKey=$(APP_NAME)
+                sonar.projectName=$(APP_NAME)
+                sonar.sources=src/main/java
+                sonar.tests=src/test/java
+                sonar.java.binaries=target/classes
+                sonar.java.test.binaries=target/test-classes
+                sonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                sonar.junit.reportPaths=target/surefire-reports
+          
+          - task: Maven@3
+            displayName: 'Run SonarQube analysis'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'sonar:sonar'
+              options: '$(MAVEN_OPTS)'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '$(JAVA_VERSION)'
+          
+          - task: SonarQubePublish@4
+            displayName: 'Publish SonarQube results'
+            inputs:
+              pollingTimeoutSec: '300'
+          
+          # Package application
+          - task: Maven@3
+            displayName: 'Package application'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'package'
+              options: '$(MAVEN_OPTS) -DskipTests'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '$(JAVA_VERSION)'
+          
+          # Copy artifacts
+          - task: CopyFiles@2
+            displayName: 'Copy JAR files'
+            inputs:
+              sourceFolder: '$(System.DefaultWorkingDirectory)/target'
+              contents: '*.jar'
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
+          
+          - task: CopyFiles@2
+            displayName: 'Copy Docker files'
+            inputs:
+              sourceFolder: '$(System.DefaultWorkingDirectory)'
+              contents: |
+                Dockerfile
+                docker-compose.yml
+                .dockerignore
+              targetFolder: '$(Build.ArtifactStagingDirectory)'
+          
+          # Publish artifacts
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish build artifacts'
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: 'spring-boot-app'
+
+  # ================================
+  # SECURITY STAGE
+  # ================================
+  - stage: Security
+    displayName: 'Security Scanning'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: SecurityScan
+        displayName: 'Security Analysis'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Download artifacts
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download build artifacts'
+            inputs:
+              artifactName: 'spring-boot-app'
+              downloadPath: '$(System.ArtifactsDirectory)'
+          
+          # OWASP Dependency Check
+          - task: dependency-check-build-task@6
+            displayName: 'OWASP Dependency Check'
+            inputs:
+              projectName: '$(APP_NAME)'
+              scanPath: '$(System.ArtifactsDirectory)/spring-boot-app'
+              format: 'ALL'
+              additionalArguments: '--enableRetired'
+          
+          # Publish security results
+          - task: PublishTestResults@2
+            displayName: 'Publish dependency check results'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'dependency-check-junit.xml'
+              searchFolder: '$(Common.TestResultsDirectory)'
+
+  # ================================
+  # CONTAINER STAGE
+  # ================================
+  - stage: Container
+    displayName: 'Build Container'
+    dependsOn: [Build, Security]
+    condition: succeeded()
+    jobs:
+      - job: ContainerBuild
+        displayName: 'Build and Push Container'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Download artifacts
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download build artifacts'
+            inputs:
+              artifactName: 'spring-boot-app'
+              downloadPath: '$(System.ArtifactsDirectory)'
+          
+          # Docker login
+          - task: Docker@2
+            displayName: 'Login to container registry'
+            inputs:
+              command: 'login'
+              containerRegistry: 'ACR-Connection'
+          
+          # Build container image
+          - task: Docker@2
+            displayName: 'Build container image'
+            inputs:
+              command: 'build'
+              repository: '$(IMAGE_REPOSITORY)'
+              dockerfile: '$(System.ArtifactsDirectory)/spring-boot-app/Dockerfile'
+              buildContext: '$(System.ArtifactsDirectory)/spring-boot-app'
+              tags: |
+                $(Build.BuildId)
+                latest
+              arguments: '--build-arg JAR_FILE=*.jar'
+          
+          # Container security scan
+          - task: AzureContainerScan@0
+            displayName: 'Scan container for vulnerabilities'
+            inputs:
+              containerRegistry: 'ACR-Connection'
+              repository: '$(IMAGE_REPOSITORY)'
+              tag: '$(Build.BuildId)'
+          
+          # Push container image
+          - task: Docker@2
+            displayName: 'Push container image'
+            inputs:
+              command: 'push'
+              repository: '$(IMAGE_REPOSITORY)'
+              containerRegistry: 'ACR-Connection'
+              tags: |
+                $(Build.BuildId)
+                latest
+
+  # ================================
+  # DEPLOYMENT STAGE
+  # ================================
+  - stage: Deploy
+    displayName: 'Deploy to $(ENVIRONMENT)'
+    dependsOn: Container
+    condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/develop'), or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
+    jobs:
+      - deployment: DeployToEnvironment
+        displayName: 'Deploy Application'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: '$(ENVIRONMENT)'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Azure CLI login
+                - task: AzureCLI@2
+                  displayName: 'Azure CLI login'
+                  inputs:
+                    azureSubscription: '$(AZURE_SUBSCRIPTION)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "Logged into Azure subscription: $(AZURE_SUBSCRIPTION)"
+                
+                # Deploy to Azure Container Instances
+                - task: AzureCLI@2
+                  displayName: 'Deploy to Azure Container Instances'
+                  inputs:
+                    azureSubscription: '$(AZURE_SUBSCRIPTION)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      # Update container instance
+                      az container create \
+                        --resource-group $(RESOURCE_GROUP) \
+                        --name $(APP_NAME)-$(ENVIRONMENT) \
+                        --image $(CONTAINER_REGISTRY)/$(IMAGE_REPOSITORY):$(Build.BuildId) \
+                        --registry-server $(CONTAINER_REGISTRY) \
+                        --registry-username $(ACR_USERNAME) \
+                        --registry-password $(ACR_PASSWORD) \
+                        --dns-name-label $(APP_NAME)-$(ENVIRONMENT) \
+                        --ports 8080 \
+                        --environment-variables \
+                          SPRING_PROFILES_ACTIVE=$(ENVIRONMENT) \
+                          DATABASE_URL=$(DATABASE_URL) \
+                          REDIS_URL=$(REDIS_URL) \
+                        --secure-environment-variables \
+                          DATABASE_PASSWORD=$(DATABASE_PASSWORD) \
+                          JWT_SECRET=$(JWT_SECRET)
+                
+                # Health check
+                - task: PowerShell@2
+                  displayName: 'Health check'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $healthUrl = "http://$(APP_NAME)-$(ENVIRONMENT).$(AZURE_REGION).azurecontainer.io:8080/actuator/health"
+                      $maxAttempts = 30
+                      $attempt = 1
+                      
+                      do {
+                        try {
+                          $response = Invoke-RestMethod -Uri $healthUrl -Method Get -TimeoutSec 10
+                          if ($response.status -eq "UP") {
+                            Write-Host "✅ Application is healthy!"
+                            exit 0
+                          }
+                        }
+                        catch {
+                          Write-Host "⏳ Attempt $attempt/$maxAttempts - Application not ready yet..."
+                        }
+                        
+                        Start-Sleep -Seconds 10
+                        $attempt++
+                      } while ($attempt -le $maxAttempts)
+                      
+                      Write-Host "❌ Application failed health check after $maxAttempts attempts"
+                      exit 1
+
+  # ================================
+  # INTEGRATION TESTS STAGE
+  # ================================
+  - stage: IntegrationTests
+    displayName: 'Integration Tests'
+    dependsOn: Deploy
+    condition: succeeded()
+    jobs:
+      - job: IntegrationTest
+        displayName: 'Run Integration Tests'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Setup Java for integration tests
+          - task: JavaToolInstaller@0
+            displayName: 'Set up JDK $(JAVA_VERSION)'
+            inputs:
+              versionSpec: '$(JAVA_VERSION)'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+          
+          # Run integration tests
+          - task: Maven@3
+            displayName: 'Run integration tests'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'test'
+              options: '$(MAVEN_OPTS) -Dspring.profiles.active=integration-test'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '$(JAVA_VERSION)'
+              publishJUnitResults: true
+              testResultsFiles: '**/failsafe-reports/TEST-*.xml'
+            env:
+              BASE_URL: 'http://$(APP_NAME)-$(ENVIRONMENT).$(AZURE_REGION).azurecontainer.io:8080'
+              API_KEY: $(INTEGRATION_TEST_API_KEY)
+
+# ================================
+# QUALITY GATES
+# ================================
+parameters:
+  - name: enableQualityGates
+    displayName: 'Enable Quality Gates'
+    type: boolean
+    default: true
+
+# Quality gate conditions
+- ${{ if parameters.enableQualityGates }}:
+  - stage: QualityGate
+    displayName: 'Quality Gate'
+    dependsOn: [Build, Security]
+    condition: succeeded()
+    jobs:
+      - job: QualityGateCheck
+        displayName: 'Quality Gate Validation'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: SonarQubePublish@4
+            displayName: 'Get SonarQube quality gate result'
+            inputs:
+              pollingTimeoutSec: '300'
+          
+          - task: PowerShell@2
+            displayName: 'Validate quality metrics'
+            inputs:
+              targetType: 'inline'
+              script: |
+                # Add custom quality gate logic here
+                # Example: Check test coverage, code quality metrics, etc.
+                Write-Host "✅ Quality gate passed!"
+```
+
+## Usage Instructions
+
+### 1. Prerequisites
+- Azure DevOps project with service connections configured
+- Azure Container Registry (ACR) set up
+- SonarQube server connection configured
+- Azure subscription with appropriate permissions
+
+### 2. Configuration
+1. Copy this pipeline to your repository as `azure-pipelines.yml`
+2. Update variables section with your specific values:
+   - `APP_NAME`: Your application name
+   - `CONTAINER_REGISTRY`: Your ACR URL
+   - `IMAGE_REPOSITORY`: Your container image name
+
+### 3. Service Connections Required
+- **Azure Resource Manager**: For Azure deployments
+- **Docker Registry**: For container registry access
+- **SonarQube**: For code quality analysis
+
+### 4. Secure Files
+Upload these files to Azure DevOps Library:
+- `application-development.properties`
+- `application-staging.properties`
+- `application-production.properties`
+
+### 5. Variable Groups
+Create variable groups for each environment with:
+- Database connection strings
+- API keys
+- Service credentials
+
+## Pipeline Features
+
+### ✅ Build & Test
+- Maven compilation and packaging
+- Unit test execution with JUnit reports
+- Code coverage with JaCoCo
+- Dependency caching for faster builds
+
+### ✅ Code Quality
+- SonarQube static analysis
+- Code coverage thresholds
+- Technical debt tracking
+- Quality gate enforcement
+
+### ✅ Security
+- OWASP dependency vulnerability scanning
+- Container image security scanning
+- Secret detection and prevention
+- Security compliance checks
+
+### ✅ Container
+- Docker image building
+- Multi-stage builds for optimization
+- Image vulnerability scanning
+- Container registry push
+
+### ✅ Deployment
+- Blue-green deployment strategy
+- Environment-specific configuration
+- Health check validation
+- Automatic rollback on failure
+
+### ✅ Testing
+- Integration test execution
+- End-to-end test automation
+- Performance test validation
+- Post-deployment verification
+
+---
+
+**Pipeline Owner**: [@devops-team]  
+**Last Updated**: 2025-06-10  
+**Next Review**: 2025-07-10

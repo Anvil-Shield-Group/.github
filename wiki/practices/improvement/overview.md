@@ -1,6 +1,26 @@
 # Best Practices Improvement Guide
 
-**Last Updated**: 2025-06-10 06:45:45 UTC by @parseen254
+**Target Audience**: All Engineers, Tech Leads, Engineering Managers  
+**Last Updated**: 2025-06-10 by System  
+**Review Cycle**: Quarterly
+
+## Quick Navigation
+
+### By Process
+- [Assessment Framework](#assessment-framework) - How to evaluate current practices
+- [Improvement Methodology](#improvement-methodology) - Systematic improvement approach
+- [Feedback Collection](#feedback-collection) - Gathering team input
+- [Implementation Planning](#implementation-planning) - Rolling out changes
+
+### By Role
+- **Individual Contributors**: Feedback submission, practice adoption
+- **Tech Leads**: Assessment leadership, change implementation
+- **Engineering Managers**: Strategic planning, resource allocation
+
+### Quick Start
+- [Submit Feedback](feedback-submission.md) - How to suggest improvements
+- [Assessment Checklist](assessment-checklist.md) - Evaluate current practices
+- [Change Implementation](change-implementation.md) - Implement improvements
 
 ## Overview
 

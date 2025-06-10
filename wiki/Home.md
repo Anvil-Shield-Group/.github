@@ -7,46 +7,47 @@
 ### Development Standards
 | Practice | Description | Template | Status |
 |----------|-------------|----------|---------|
-| [Version Control](practices/version-control.md) | Git workflow, branching, commits | [Git Template](templates/git-template.md) | 🟡 |
-| [Documentation](practices/documentation.md) | README, API docs, comments | [Doc Templates](templates/docs/) | 🔴 |
-| [Testing](practices/testing.md) | Unit, integration, E2E testing | [Test Templates](templates/testing/) | 🟡 |
-| [Code Quality](practices/code-quality.md) | Linting, reviews, standards | [Quality Checklist](templates/quality-checklist.md) | 🟡 |
+| [Version Control](practices/version-control/overview.md) | Git workflow, branching, commits | [PR Templates](templates/pull-requests/) | 🟡 |
+| [Documentation](practices/documentation/overview.md) | README, API docs, comments | [Doc Templates](templates/documentation/) | 🟢 |
+| [Testing](practices/testing/overview.md) | Unit, integration, E2E testing | [Test Templates](templates/testing/) | 🟢 |
+| [Code Quality](practices/code-quality/overview.md) | Linting, reviews, standards | [Quality Gates](templates/ci-cd/quality-gates.yml) | 🟡 |
 
 ### Operations & Delivery
 | Practice | Description | Template | Status |
 |----------|-------------|----------|---------|
-| [CI/CD](practices/ci-cd.md) | Build, test, deploy pipelines | [Pipeline Templates](templates/pipelines/) | 🟡 |
-| [Monitoring](practices/monitoring.md) | Logging, metrics, alerting | [Monitoring Guide](templates/monitoring-template.md) | 🔴 |
-| [Release Management](practices/releases.md) | Versioning, deployment process | [Release Template](templates/release-template.md) | 🔴 |
+| [CI/CD](practices/ci-cd/overview.md) | Build, test, deploy pipelines | [Pipeline Templates](templates/ci-cd/) | 🟢 |
+| [Monitoring](practices/monitoring/overview.md) | Logging, metrics, alerting | [Runbook Template](templates/documentation/runbook.md) | 🔴 |
+| [Release Management](practices/release-management/overview.md) | Versioning, deployment process | [Release Templates](templates/release-management/) | 🟡 |
 
 ### Team Collaboration
 | Practice | Description | Template | Status |
 |----------|-------------|----------|---------|
-| [Task Management](practices/task-management.md) | Feature planning, ticket format | [Task Templates](templates/tasks/) | 🔴 |
-| [Communication](practices/communication.md) | Standups, meetings, channels | [Meeting Templates](templates/meetings/) | 🔴 |
-| [Developer Experience](practices/dev-experience.md) | Tools, workflows, happiness | [DX Survey](templates/dx-survey.md) | 🔴 |
+| [Task Management](practices/task-management/overview.md) | Feature planning, ticket format | [Task Templates](templates/task-management/) | 🔴 |
+| [Communication](practices/communication/overview.md) | Standups, meetings, channels | [Meeting Templates](templates/communication/) | 🔴 |
+| [Improvement Process](practices/improvement-guide.md) | Continuous improvement framework | [Feedback Templates](templates/improvement/) | 🟡 |
 
 ---
 
 ## 🛠️ Quick Access
 
 ### Templates
-- [Pull Request](templates/pr-template.md)
-- [Issue Report](templates/issue-template.md)  
-- [README](templates/readme-template.md)
-- [Architecture Decision Record](templates/adr-template.md)
+- [Pull Request Templates](templates/pull-requests/) - Feature, bug fix, hotfix PRs
+- [Documentation Templates](templates/documentation/) - README, API docs, runbooks
+- [Testing Templates](templates/testing/) - Test plans, bug reports
+- [CI/CD Templates](templates/ci-cd/) - Pipeline configurations, quality gates
+- [Project Setup](templates/project-setup/) - New repository checklist
 
-### Tools & Setup
-- [Development Environment](tools/dev-setup.md)
-- [IDE Configuration](tools/ide-config.md)
-- [Docker Setup](tools/docker-setup.md)
+### Getting Started Guides
+- [New Developer Onboarding](guides/quick-start/new-developer.md) - Complete setup guide
+- [New Project Setup](guides/quick-start/new-project.md) - Repository initialization
+- [Technology Migration](guides/migration/) - Framework upgrade guides
+- [Troubleshooting Common Issues](guides/troubleshooting/) - Solutions to frequent problems
 
 ### By Technology Stack
-- [Spring Boot Guidelines](stacks/spring-boot.md)
-- [ASP.NET Guidelines](stacks/aspnet.md) 
-- [NextJS Guidelines](stacks/nextjs.md)
-- [Flutter Guidelines](stacks/flutter.md)
-- [Laravel Migration Guide](stacks/laravel-migration.md)
+- [Spring Boot Guidelines](guides/technology-stacks/spring-boot.md) - Java development standards
+- [ASP.NET Core Guidelines](guides/technology-stacks/aspnet-core.md) - .NET development standards
+- [NextJS Guidelines](guides/technology-stacks/nextjs.md) - React/Next.js development standards
+- [Flutter Guidelines](guides/technology-stacks/flutter.md) - Mobile development standards
 
 ---
 

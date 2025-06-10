@@ -1,0 +1,497 @@
+# Quality Gates Configuration Template
+
+**Target Audience**: DevOps Engineers, Quality Engineers  
+**Last Updated**: 2025-06-10 by System  
+**Template Type**: CI/CD Quality Gates Configuration
+
+```yaml
+# Quality Gates Configuration for CI/CD Pipelines
+# This file defines quality standards that must be met before deployment
+
+# ================================
+# GLOBAL QUALITY STANDARDS
+# ================================
+quality_gates:
+  global:
+    # Test Coverage Requirements
+    test_coverage:
+      unit_tests:
+        minimum_percentage: 80
+        fail_on_missing: true
+        exclusions:
+          - "**/*Test.java"
+          - "**/test/**"
+          - "**/mock/**"
+          - "**/config/**"
+      
+      integration_tests:
+        minimum_percentage: 60
+        fail_on_missing: false
+      
+      e2e_tests:
+        minimum_percentage: 40
+        fail_on_missing: false
+    
+    # Code Quality Metrics
+    code_quality:
+      # SonarQube Quality Gate
+      sonarqube:
+        quality_gate: "Sonar way"
+        conditions:
+          - metric: "new_coverage"
+            operator: "LT"
+            threshold: 80
+          - metric: "new_duplicated_lines_density"
+            operator: "GT"
+            threshold: 3
+          - metric: "new_maintainability_rating"
+            operator: "GT"
+            threshold: "A"
+          - metric: "new_reliability_rating"
+            operator: "GT"
+            threshold: "A"
+          - metric: "new_security_rating"
+            operator: "GT"
+            threshold: "A"
+      
+      # Static Analysis
+      static_analysis:
+        max_critical_issues: 0
+        max_major_issues: 5
+        max_minor_issues: 50
+        fail_on_code_smells: false
+    
+    # Security Requirements
+    security:
+      vulnerability_scan:
+        max_critical: 0
+        max_high: 0
+        max_medium: 5
+        max_low: 20
+        fail_on_unknown: false
+      
+      dependency_scan:
+        max_critical_vulnerabilities: 0
+        max_high_vulnerabilities: 2
+        exclude_dev_dependencies: true
+        
+      secret_detection:
+        fail_on_secrets: true
+        exclude_patterns:
+          - "test/**"
+          - "docs/**"
+    
+    # Performance Benchmarks
+    performance:
+      build_time:
+        max_duration_minutes: 30
+        warning_threshold_minutes: 20
+      
+      artifact_size:
+        max_size_mb: 500
+        warning_threshold_mb: 300
+        
+      response_time:
+        max_response_ms: 2000
+        warning_threshold_ms: 1000
+
+# ================================
+# TECHNOLOGY-SPECIFIC STANDARDS
+# ================================
+
+# Spring Boot Applications
+spring_boot:
+  test_coverage:
+    unit_tests:
+      minimum_percentage: 85
+      exclude_packages:
+        - "**.config.**"
+        - "**.dto.**"
+        - "**.entity.**"
+  
+  code_quality:
+    checkstyle:
+      config_file: "google_checks.xml"
+      max_violations: 0
+    
+    spotbugs:
+      effort: "max"
+      threshold: "medium"
+      max_bugs: 0
+    
+    pmd:
+      ruleset: "java-basic,java-design,java-unusedcode"
+      max_violations: 10
+  
+  security:
+    owasp_dependency_check:
+      cvss_threshold: 7.0
+      fail_on_error: true
+    
+    spring_security:
+      require_authentication: true
+      require_authorization: true
+      csrf_protection: true
+
+# ASP.NET Core Applications  
+aspnet_core:
+  test_coverage:
+    unit_tests:
+      minimum_percentage: 80
+      exclude_assemblies:
+        - "*.Tests"
+        - "*.IntegrationTests"
+  
+  code_quality:
+    roslyn_analyzers:
+      treat_warnings_as_errors: true
+      style_cop: true
+      fx_cop: true
+    
+    code_metrics:
+      max_cyclomatic_complexity: 10
+      max_class_coupling: 15
+      max_depth_of_inheritance: 4
+  
+  security:
+    security_code_scan:
+      enabled: true
+      fail_on_issues: true
+    
+    nuget_audit:
+      audit_level: "moderate"
+      fail_on_vulnerabilities: true
+
+# NextJS Applications
+nextjs:
+  test_coverage:
+    unit_tests:
+      minimum_percentage: 75
+      include_patterns:
+        - "src/**/*.{js,jsx,ts,tsx}"
+      exclude_patterns:
+        - "src/**/*.test.{js,jsx,ts,tsx}"
+        - "src/**/*.spec.{js,jsx,ts,tsx}"
+  
+  code_quality:
+    eslint:
+      config: "@next/eslint-config-next"
+      max_warnings: 10
+      max_errors: 0
+    
+    typescript:
+      strict_mode: true
+      no_implicit_any: true
+    
+    bundle_analysis:
+      max_bundle_size_mb: 1
+      max_chunk_size_kb: 244
+  
+  security:
+    npm_audit:
+      audit_level: "moderate"
+      production_only: true
+    
+    next_security_headers:
+      require_csp: true
+      require_hsts: true
+      require_xframe_options: true
+
+# Flutter Applications
+flutter:
+  test_coverage:
+    unit_tests:
+      minimum_percentage: 70
+      exclude_patterns:
+        - "lib/**/*.g.dart"
+        - "lib/**/*.freezed.dart"
+  
+  code_quality:
+    dart_analyzer:
+      strong_mode: true
+      implicit_casts: false
+      implicit_dynamic: false
+    
+    flutter_lints:
+      package: "flutter_lints"
+      strict: true
+  
+  performance:
+    app_size:
+      max_apk_size_mb: 50
+      max_ipa_size_mb: 100
+    
+    startup_time:
+      max_cold_start_ms: 3000
+      max_warm_start_ms: 1000
+
+# ================================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# ================================
+
+environments:
+  development:
+    # Relaxed standards for development
+    quality_gates:
+      test_coverage:
+        unit_tests:
+          minimum_percentage: 60
+      code_quality:
+        sonarqube:
+          conditions:
+            - metric: "new_coverage"
+              threshold: 60
+      security:
+        vulnerability_scan:
+          max_medium: 10
+          max_low: 50
+  
+  staging:
+    # Standard quality gates for staging
+    quality_gates:
+      # Use global standards
+      inherit: "global"
+  
+  production:
+    # Strictest standards for production
+    quality_gates:
+      test_coverage:
+        unit_tests:
+          minimum_percentage: 90
+        integration_tests:
+          minimum_percentage: 80
+      security:
+        vulnerability_scan:
+          max_critical: 0
+          max_high: 0
+          max_medium: 0
+        dependency_scan:
+          max_high_vulnerabilities: 0
+
+# ================================
+# PIPELINE INTEGRATION
+# ================================
+
+# Azure DevOps Pipeline Tasks
+azure_devops:
+  # SonarQube Quality Gate Task
+  sonarqube_quality_gate:
+    task: 'SonarQubePublish@4'
+    inputs:
+      pollingTimeoutSec: '300'
+    condition: 'always()'
+  
+  # Custom Quality Gate Script
+  custom_quality_gate:
+    task: 'PowerShell@2'
+    displayName: 'Quality Gate Validation'
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Test Coverage Check
+        $coverageFile = "$(Agent.TempDirectory)/coverage.xml"
+        if (Test-Path $coverageFile) {
+          [xml]$coverage = Get-Content $coverageFile
+          $coveragePercentage = [math]::Round([decimal]$coverage.coverage.'line-rate' * 100, 2)
+          Write-Host "Code coverage: $coveragePercentage%"
+          
+          if ($coveragePercentage -lt $(MINIMUM_COVERAGE_PERCENTAGE)) {
+            Write-Host "##vso[task.logissue type=error]Code coverage ($coveragePercentage%) below minimum ($(MINIMUM_COVERAGE_PERCENTAGE)%)"
+            exit 1
+          }
+        }
+        
+        # Security Scan Check
+        $securityFile = "$(Agent.TempDirectory)/security-scan.json"
+        if (Test-Path $securityFile) {
+          $security = Get-Content $securityFile | ConvertFrom-Json
+          $criticalVulns = $security.vulnerabilities | Where-Object { $_.severity -eq "critical" }
+          
+          if ($criticalVulns.Count -gt 0) {
+            Write-Host "##vso[task.logissue type=error]Found $($criticalVulns.Count) critical vulnerabilities"
+            exit 1
+          }
+        }
+        
+        Write-Host "✅ All quality gates passed!"
+
+# GitHub Actions Integration
+github_actions:
+  quality_gate_action:
+    name: 'Quality Gate'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Download artifacts'
+        uses: 'actions/download-artifact@v3'
+        with:
+          name: 'quality-reports'
+      
+      - name: 'SonarQube Quality Gate'
+        uses: 'sonarqube-quality-gate-action@master'
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      
+      - name: 'Custom Quality Checks'
+        run: |
+          # Test coverage validation
+          COVERAGE=$(grep -oP 'line-rate="\K[^"]*' coverage.xml | awk '{sum += $1} END {print sum/NR * 100}')
+          if (( $(echo "$COVERAGE < $MINIMUM_COVERAGE" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% below minimum $MINIMUM_COVERAGE%"
+            exit 1
+          fi
+          
+          # Security validation
+          CRITICAL_VULNS=$(jq '.vulnerabilities | map(select(.severity == "critical")) | length' security-report.json)
+          if [ "$CRITICAL_VULNS" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_VULNS critical vulnerabilities"
+            exit 1
+          fi
+          
+          echo "✅ Quality gate passed!"
+
+# ================================
+# REPORTING AND NOTIFICATIONS
+# ================================
+
+reporting:
+  # Quality Gate Status Badges
+  badges:
+    sonarqube: "https://sonarcloud.io/api/project_badges/measure?project={PROJECT_KEY}&metric=alert_status"
+    coverage: "https://sonarcloud.io/api/project_badges/measure?project={PROJECT_KEY}&metric=coverage"
+    security: "https://sonarcloud.io/api/project_badges/measure?project={PROJECT_KEY}&metric=security_rating"
+  
+  # Notification Channels
+  notifications:
+    quality_gate_failed:
+      slack:
+        channel: "#quality-alerts"
+        message: "🚨 Quality gate failed for {PROJECT_NAME} on {BRANCH}"
+        include_details: true
+      
+      email:
+        recipients:
+          - "team-lead@company.com"
+          - "qa-team@company.com"
+        subject: "Quality Gate Failure: {PROJECT_NAME}"
+    
+    quality_gate_passed:
+      slack:
+        channel: "#deployments"
+        message: "✅ Quality gate passed for {PROJECT_NAME} - Ready for deployment"
+
+# ================================
+# EXEMPTIONS AND OVERRIDES
+# ================================
+
+exemptions:
+  # Temporary exemptions (with expiration)
+  temporary:
+    - project: "legacy-system"
+      reason: "Legacy codebase migration in progress"
+      expires: "2025-12-31"
+      relaxed_standards:
+        test_coverage:
+          minimum_percentage: 40
+    
+    - project: "prototype-app"
+      reason: "Proof of concept development"
+      expires: "2025-08-01"
+      relaxed_standards:
+        security:
+          vulnerability_scan:
+            max_high: 10
+  
+  # Permanent exemptions (requires approval)
+  permanent:
+    - project: "demo-application"
+      reason: "Demo application - not production"
+      approved_by: "engineering-manager"
+      approved_date: "2025-06-01"
+      relaxed_standards:
+        test_coverage:
+          minimum_percentage: 30
+        security:
+          vulnerability_scan:
+            max_critical: 2
+
+# ================================
+# QUALITY METRICS TRACKING
+# ================================
+
+metrics:
+  # Dashboard Configuration
+  dashboard:
+    refresh_interval: "5m"
+    retention_days: 90
+    
+    widgets:
+      - type: "gauge"
+        title: "Test Coverage"
+        metric: "test_coverage_percentage"
+        thresholds:
+          red: 60
+          yellow: 80
+          green: 90
+      
+      - type: "chart"
+        title: "Quality Gate Success Rate"
+        metric: "quality_gate_success_rate"
+        time_range: "30d"
+      
+      - type: "table"
+        title: "Recent Failures"
+        metric: "quality_gate_failures"
+        limit: 10
+  
+  # Trend Analysis
+  trends:
+    quality_improvement:
+      calculate: "monthly"
+      baseline_period: "3m"
+      target_improvement: "5%"
+    
+    security_posture:
+      calculate: "weekly"
+      track_metrics:
+        - "critical_vulnerabilities"
+        - "security_rating"
+        - "dependency_vulnerabilities"
+
+```
+
+## Implementation Guide
+
+### 1. Pipeline Integration
+```yaml
+# Add to your pipeline before deployment stage
+- stage: QualityGate
+  displayName: 'Quality Gate Validation'
+  dependsOn: [Build, Test, Security]
+  jobs:
+    - job: QualityGateCheck
+      steps:
+        - template: templates/quality-gate-template.yml
+          parameters:
+            technology: 'spring-boot'
+            environment: '$(ENVIRONMENT)'
+```
+
+### 2. Configuration Management
+Store quality gate configurations in:
+- **Version Control**: Quality standards as code
+- **Environment Variables**: Thresholds and limits
+- **Key Vault**: Sensitive configuration like API keys
+
+### 3. Monitoring Setup
+Configure monitoring dashboards to track:
+- Quality gate success rates
+- Trend analysis over time
+- Failed quality checks by category
+- Team performance metrics
+
+---
+
+**Configuration Owner**: [@quality-team]  
+**Last Updated**: 2025-06-10  
+**Next Review**: 2025-07-10
