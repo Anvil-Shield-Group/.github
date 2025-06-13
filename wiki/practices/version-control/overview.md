@@ -75,7 +75,7 @@ graph LR
     FEATURE1 --> DEVELOP
     FEATURE2 --> DEVELOP
     DEVELOP --> STAGING
-    RELEASE --> LIVE
+    STAGING --> LIVE
     LIVE --> HOTFIX
     HOTFIX --> LIVE
     HOTFIX --> DEVELOP
