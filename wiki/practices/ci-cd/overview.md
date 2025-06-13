@@ -1,7 +1,6 @@
 # CI/CD Pipeline Practices Overview
 
 **Target Audience**: All Engineers, DevOps Team, Release Engineers  
-**Last Updated**: 2025-06-10 07:03:59 UTC by @parseen254
 
 ## Overview
 
@@ -15,24 +14,6 @@ Comprehensive CI/CD standards and practices for automated build, test, and deplo
 - [⚛️ NextJS CI/CD](nextjs.md) - Frontend build and deployment
 - [📱 Flutter CI/CD](flutter.md) - Mobile app build and distribution
 - [🔄 Laravel CI/CD](laravel.md) - Legacy pipeline and migration strategy
-
-### By Pipeline Stage
-- [🔨 Build Automation](stages/build.md) - Compilation, packaging, dependency management
-- [🧪 Test Automation](stages/testing.md) - Unit, integration, and E2E test execution
-- [🔍 Code Quality Gates](stages/quality-gates.md) - Static analysis, security scans, coverage
-- [📦 Artifact Management](stages/artifacts.md) - Package versioning, storage, distribution
-- [🚀 Deployment Automation](stages/deployment.md) - Environment promotion, rollback strategies
-
-### By Environment
-- [🛠️ Development Environment](environments/development.md) - Dev workflow and automation
-- [🧪 Staging Environment](environments/staging.md) - Pre-production validation
-- [🌟 Production Environment](environments/production.md) - Live deployment procedures
-- [🔧 Environment Management](environments/management.md) - Infrastructure as Code, configuration
-
-### By Role
-- [👨‍💻 Developer CI/CD Guide](roles/developers.md) - Daily workflow integration
-- [🏗️ DevOps Pipeline Management](roles/devops.md) - Pipeline design and maintenance
-- [🚢 Release Engineering](roles/release-engineers.md) - Release orchestration and coordination
 
 ## CI/CD Philosophy
 
@@ -88,33 +69,6 @@ graph LR
 7. **Security Built-In**: Integrate security scanning throughout the pipeline
 8. **Observability**: Monitor and measure pipeline performance
 
-## Current State Assessment
-
-### Pipeline Maturity by Stack
-
-| Stack | Current Maturity | Deployment Frequency | Build Time | Test Coverage Integration |
-|-------|------------------|---------------------|------------|---------------------------|
-| **Spring Boot** | L3 - Advanced | 2-3x daily | 8 minutes | ✅ Coverage gates enabled |
-| **ASP.NET Core** | L3 - Advanced | 2-3x daily | 6 minutes | ✅ Coverage gates enabled |
-| **NextJS** | L2 - Intermediate | 1x daily | 12 minutes | ⚠️ Partial coverage integration |
-| **Flutter** | L2 - Intermediate | Weekly releases | 25 minutes | ⚠️ Limited automation |
-| **Laravel** | L1 - Basic | Manual deployments | N/A | ❌ Manual testing |
-
-### Current Challenges
-
-- **Inconsistent Pipeline Standards**: Different approaches across technology stacks
-- **Long Build Times**: Some pipelines take >20 minutes, slowing developer feedback
-- **Manual Release Steps**: Several manual approval gates create deployment bottlenecks
-- **Limited Rollback Testing**: Rollback procedures not regularly tested
-- **Environment Drift**: Configuration differences between environments cause issues
-- **Security Integration**: Security scans not consistently integrated across all pipelines
-
-### Success Areas
-
-- **Azure DevOps Integration**: Centralized pipeline management and monitoring
-- **Automated Testing**: Good unit and integration test automation for backend services
-- **Infrastructure Automation**: Terraform-managed infrastructure deployment
-- **Monitoring Integration**: Deployment success monitoring and health checks
 
 ## CI/CD Standards
 
@@ -265,23 +219,23 @@ graph LR
     subgraph "Branch Strategy"
         FEATURE[Feature Branches]
         DEVELOP[Develop Branch]
-        RELEASE[Release Branches]
-        MAIN[Main Branch]
+        STAGING[SIT Branches]
+        LIVE[Live Branch]
         HOTFIX[Hotfix Branches]
     end
     
     subgraph "Pipeline Triggers"
         PR_BUILD[PR Validation Pipeline]
         DEV_DEPLOY[Auto Deploy to Dev]
-        STAGING_DEPLOY[Auto Deploy to Staging]
-        PROD_DEPLOY[Manual Deploy to Prod]
+        STAGING_DEPLOY[Auto Deploy to SIT]
+        PROD_DEPLOY[Manual Deploy to Live]
         HOTFIX_PIPELINE[Expedited Hotfix Pipeline]
     end
     
     FEATURE --> PR_BUILD
     DEVELOP --> DEV_DEPLOY
-    RELEASE --> STAGING_DEPLOY
-    MAIN --> PROD_DEPLOY
+    STAGING --> STAGING_DEPLOY
+    LIVE --> PROD_DEPLOY
     HOTFIX --> HOTFIX_PIPELINE
 ```
 
@@ -290,9 +244,9 @@ graph LR
 | Branch Pattern | Trigger | Target Environment | Approval Required |
 |----------------|---------|-------------------|-------------------|
 | `feature/*` | PR creation/update | PR validation only | Peer review |
-| `develop` | Push/merge | Development | Automatic |
-| `release/*` | Push/merge | Staging | Automatic |
-| `main` | Push/merge | Production | Manual approval |
+| `dev` | Push/merge | Development | Automatic |
+| `sit` | Push/merge | Staging | Automatic |
+| `live` | Push/merge | Production | Manual approval |
 | `hotfix/*` | Push/merge | All environments | Expedited approval |
 
 ## Build Standards
@@ -301,9 +255,9 @@ graph LR
 
 | Technology Stack | Target Build Time | Current Average | Optimization Status |
 |------------------|-------------------|-----------------|-------------------|
-| **Spring Boot** | <5 minutes | 8 minutes | 🟡 Optimization in progress |
-| **ASP.NET Core** | <4 minutes | 6 minutes | 🟡 Optimization in progress |
-| **NextJS** | <3 minutes | 12 minutes | 🔴 Requires optimization |
+| **Spring Boot** | <5 minutes | 8 minutes | 🔴 Requires optimization  |
+| **ASP.NET Core** | <5 minutes | 8 minutes | 🔴 Requires optimization |
+| **NextJS** | <5 minutes | 14 minutes | 🔴 Requires optimization |
 | **Flutter** | <10 minutes | 25 minutes | 🔴 Requires optimization |
 
 ### Build Optimization Strategies
@@ -383,7 +337,7 @@ graph TB
 
 ### Security Quality Gates
 
-| Security Check | Tool | Threshold | Action on Failure |
+| Security Check | Tool | Target Threshold | Action on Failure |
 |----------------|------|-----------|-------------------|
 | **Critical Vulnerabilities** | Snyk | 0 critical | Block deployment |
 | **High Vulnerabilities** | Snyk | <3 high | Manual review required |
@@ -391,65 +345,34 @@ graph TB
 | **Secrets in Code** | TruffleHog | 0 secrets | Block deployment |
 | **License Violations** | WhiteSource | No violations | Block deployment |
 
-## Implementation Roadmap
-
-### Phase 1: Standardization (Weeks 1-2) ✅ In Progress
-- [x] Document CI/CD standards and requirements
-- [ ] Audit current pipeline configurations across all stacks
-- [ ] Standardize pipeline templates in Azure DevOps
-- [ ] Implement consistent quality gates
-- [ ] Set up centralized artifact storage
-
-### Phase 2: Optimization (Weeks 3-4)
-- [ ] Implement build caching strategies
-- [ ] Optimize slow-running test suites
-- [ ] Parallelize build and test jobs
-- [ ] Implement incremental build strategies
-- [ ] Set up pipeline performance monitoring
-
-### Phase 3: Advanced Automation (Weeks 5-6)
-- [ ] Implement blue-green deployment for production
-- [ ] Set up automated rollback mechanisms
-- [ ] Integrate chaos engineering in pipelines
-- [ ] Implement canary deployment strategies
-- [ ] Set up automated performance testing
-
-### Phase 4: Intelligence & Analytics (Weeks 7-8)
-- [ ] Implement pipeline analytics and insights
-- [ ] Set up predictive failure detection
-- [ ] Implement smart test selection
-- [ ] Set up deployment success prediction
-- [ ] Create pipeline optimization recommendations
-
 ## Metrics & Success Criteria
 
 ### Pipeline Performance Metrics
 
-| Metric | Current Baseline | 3-Month Target | 6-Month Target |
+| Metric |  Baseline | 3-Month Target | 6-Month Target |
 |--------|------------------|----------------|----------------|
 | **Deployment Frequency** | 1x daily | 3x daily | 5x daily |
 | **Lead Time** | 4.2 hours | 2 hours | 1 hour |
-| **MTTR** | 45 minutes | 20 minutes | 10 minutes |
 | **Change Failure Rate** | 8% | 5% | 2% |
-| **Build Success Rate** | 92% | 96% | 98% |
+| **Build Success Rate** | 80% | 90% | 100% |
 
 ### Quality Metrics
 
-| Quality Gate | Current Pass Rate | Target | Measurement |
-|--------------|------------------|---------|-------------|
-| **Unit Test Coverage** | 78% average | >80% all projects | SonarQube reports |
-| **Security Scan Pass** | 85% | 95% | Security tool dashboards |
-| **Code Quality Gate** | 82% | 90% | SonarQube quality gates |
-| **Integration Test Pass** | 94% | 98% | Test result analytics |
+| Quality Gate | Target | Measurement |
+|-------------|---------|-------------|
+| **Unit Test Coverage**  | >80% all projects | SonarQube reports |
+| **Security Scan Pass** | 95% | Security tool dashboards |
+| **Code Quality Gate**| 90% | SonarQube quality gates |
+| **Integration Test Pass** | 98% | Test result analytics |
 
 ### Business Impact Metrics
 
-| Metric | Current | Target | Business Value |
-|--------|---------|--------|----------------|
-| **Time to Market** | 2 weeks | 3 days | Faster feature delivery |
-| **Deployment Confidence** | 3.2/5 | 4.5/5 | Reduced deployment anxiety |
-| **Developer Productivity** | 65% feature work | 80% feature work | Less time on deployment issues |
-| **Customer Impact Reduction** | 15 minutes MTTR | 5 minutes MTTR | Improved customer experience |
+| Metric | Target | Business Value |
+|--------|--------|----------------|
+| **Time to Market** | 3 days | Faster feature delivery |
+| **Deployment Confidence** | 4.5/5 | Reduced deployment anxiety |
+| **Developer Productivity** | 80% feature work | Less time on deployment issues |
+| **Customer Impact Reduction** | 5 minutes MTTR | Improved customer experience |
 
 ## Pipeline Templates
 
@@ -493,35 +416,7 @@ Choose your technology stack to get started with our standardized pipeline templ
 4. **Implement security scanning integration**
 5. **Create documentation** for team-specific customizations
 
-## Support & Community
-
-### Training & Resources
-- **[CI/CD Workshop Series](../../resources/training/ci-cd/)** - Hands-on pipeline development
-- **[Azure DevOps Best Practices](../../resources/tutorials/azure-devops/)** - Platform-specific guidance
-- **[Pipeline Optimization Guide](../../resources/best-practices/pipeline-optimization.md)** - Performance tuning
-- **[Security Integration Handbook](../../resources/security/ci-cd-security.md)** - Secure pipeline practices
-
-### Communication Channels
-- **Slack Communities**:
-  - `#ci-cd-help` - General pipeline questions and troubleshooting
-  - `#azure-devops` - Platform-specific discussions
-  - `#deployment-automation` - Deployment strategy discussions
-  - `#pipeline-optimization` - Performance and efficiency improvements
-- **Office Hours**: Tuesdays 3-4 PM UTC with DevOps Team
-- **Pipeline Reviews**: Weekly review sessions for complex deployments
-
-### External Resources
-- [Azure DevOps Documentation](https://docs.microsoft.com/en-us/azure/devops/)
-- [DORA State of DevOps Report](https://cloud.google.com/devops/state-of-devops/)
-- [GitLab CI/CD Best Practices](https://docs.gitlab.com/ee/ci/pipelines/)
-
+## Support & Resources
+### Submit Feedback
+- **GitHub**: Create issue with "ci-cd" label
 ---
-
-**Next Steps:**
-1. Choose your technology stack guide from navigation above
-2. Complete the pipeline maturity assessment for your projects
-3. Implement quick wins identified in the assessment
-4. Set up monitoring for your pipelines
-5. Join our CI/CD community for ongoing collaboration
-
-**Questions or Feedback?** Contact @parseen254 or post in #ci-cd-help
