@@ -405,5 +405,3 @@ git reset --soft HEAD~1
 ### Submit Feedback
 - **GitHub**: Create issue with "version-control" label
 ---
-**Last Updated**: 2025-06-13
-**Next Review**: 2025-09-10

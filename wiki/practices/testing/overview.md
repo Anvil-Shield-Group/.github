@@ -142,7 +142,3 @@ graph TB
 ### Submit Feedback
 - **GitHub**: Create issue with "testing" label
 ---
-**Last Updated**: 2025-06-13  
-**Next Review**: 2025-09-10
-
----
