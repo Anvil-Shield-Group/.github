@@ -43,9 +43,8 @@ This guide establishes consistent version control practices across all engineeri
 | Metric | Current | Target | Status |
 |--------|---------|---------|---------|
 | Commit Message Compliance | 40% | 95% | 🔴 Needs Improvement |
-| PR Review Time | 2.3 days | <1 day | 🔴 Needs Improvement |
-| Merge Conflicts | 15% | <5% | 🟡 In Progress |
-| Branch Protection Coverage | 80% | 100% | 🟡 In Progress |
+| PR Review Time | ~2 days | <1 day | 🔴 Needs Improvement |
+| Branch Protection Coverage | 0% | 100% | 🟡 In Progress |
 
 ## Git Workflow
 
@@ -53,9 +52,9 @@ This guide establishes consistent version control practices across all engineeri
 
 ```mermaid
 graph LR
-    subgraph "Main Branches"
-        MAIN[main]
-        DEVELOP[develop]
+    subgraph "Live Branches"
+        LIVE[Live]
+        DEVELOP[dev]
     end
     
     subgraph "Feature Branches"
@@ -63,8 +62,8 @@ graph LR
         FEATURE2[feature/TICKET-124-payment-flow]
     end
     
-    subgraph "Release Branches"
-        RELEASE[release/v1.2.0]
+    subgraph "Staging Branches"
+        STAGING[sit]
     end
     
     subgraph "Hotfix Branches"
@@ -75,10 +74,10 @@ graph LR
     DEVELOP --> FEATURE2
     FEATURE1 --> DEVELOP
     FEATURE2 --> DEVELOP
-    DEVELOP --> RELEASE
-    RELEASE --> MAIN
-    MAIN --> HOTFIX
-    HOTFIX --> MAIN
+    DEVELOP --> STAGING
+    RELEASE --> LIVE
+    LIVE --> HOTFIX
+    HOTFIX --> LIVE
     HOTFIX --> DEVELOP
 ```
 
@@ -87,7 +86,6 @@ graph LR
 feature/TICKET-123-short-description    # New features
 bugfix/TICKET-456-fix-description       # Bug fixes
 hotfix/TICKET-789-critical-issue        # Critical production fixes
-release/v1.2.0                          # Release preparation
 support/maintenance-task                # Maintenance work
 ```
 
@@ -99,8 +97,8 @@ support/maintenance-task                # Maintenance work
 ### Daily Workflow
 ```bash
 # 1. Start your day - sync with latest changes
-git checkout develop
-git pull origin develop
+git checkout dev
+git pull origin dev
 
 # 2. Create feature branch
 git checkout -b feature/TICKET-123-add-user-validation
@@ -116,7 +114,7 @@ git commit -m "feat(auth): add email validation for user registration"
 git push origin feature/TICKET-123-add-user-validation
 
 # 6. End of day or feature complete - create PR
-# Use GitHub/Azure DevOps interface with appropriate template
+# Use GitHub/Azure DevOps interface with appropriate template from [PR Templates](../../templates/pull-requests) directory of this wiki repository
 ```
 
 ## Commit Standards
@@ -189,7 +187,7 @@ git commit -m "docs(README): add setup instructions for development environment"
 - [ ] Use appropriate PR template for change type
 - [ ] Link to relevant ticket/issue
 - [ ] Add meaningful title and description
-- [ ] Assign appropriate reviewers (minimum 2)
+- [ ] Assign appropriate reviewers (minimum 1)
 - [ ] Add relevant labels
 - [ ] Ensure CI checks pass
 - [ ] Self-review completed
@@ -204,13 +202,13 @@ Choose the appropriate template based on your change:
 ### Review Requirements
 | Branch | Reviewers | Approvals | Additional Checks |
 |--------|-----------|-----------|-------------------|
-| `develop` | Team members | 2 | CI passing |
-| `main` | Senior developers | 2 + tech lead | CI + manual testing |
-| `release/*` | Tech lead + QA | 3 | Full test suite |
+| `dev` | Team members | 0 | CI passing |
+| `sit` | Senior developers | 1 | CI + manual testing |
+| `live` | Tech lead + QA | 2 | Full test suite |
 
 ### Review Guidelines
 **For Reviewers:**
-- Review within 24 hours (same day for hotfixes)
+- Review within 4 hours (same day for hotfixes)
 - Focus on functionality, security, performance
 - Check for code style and standards compliance
 - Verify tests are adequate
@@ -223,10 +221,10 @@ Choose the appropriate template based on your change:
 - Re-request review after changes
 
 ### Merge Strategy
-- **Feature branches → develop**: Squash and merge
-- **Release branches → main**: Merge commit
-- **Hotfix branches → main**: Squash and merge
-- **main → develop**: Merge commit (after releases)
+- **Feature branches → dev**: Rebase and merge
+- **dev → sit**: Rebase and merge
+- **sit → live**: Merge Commit
+- **Hotfix branches → live**: Merge Commit
 
 ## Tools & Automation
 
@@ -306,6 +304,7 @@ fi
 ### Automated Tools
 
 #### Commitizen (Node.js projects)
+https://commitizen-tools.github.io/commitizen/
 ```bash
 # Install commitizen
 npm install -g commitizen cz-conventional-changelog
@@ -336,7 +335,7 @@ npm install --save-dev husky
 ## Branch Protection Rules
 
 ### Repository Settings
-**For `main` branch:**
+**For `live` branch:**
 - [ ] Require pull request reviews before merging
 - [ ] Require status checks to pass before merging
 - [ ] Require branches to be up to date before merging
@@ -345,7 +344,7 @@ npm install --save-dev husky
 - [ ] Allow force pushes: ❌
 - [ ] Allow deletions: ❌
 
-**For `develop` branch:**
+**For `sit` branch:**
 - [ ] Require pull request reviews before merging
 - [ ] Require status checks to pass before merging
 - [ ] Include administrators in restrictions
@@ -356,7 +355,7 @@ npm install --save-dev husky
 - [ ] Unit tests
 - [ ] Code quality scan
 - [ ] Security scan
-- [ ] Integration tests (for main branch)
+- [ ] Integration tests (for live branch)
 
 ## Troubleshooting Common Issues
 
@@ -415,12 +414,7 @@ git reset --soft HEAD~1
 - Stack-specific PR templates ✅ Created
 
 ### Submit Feedback
-- **Slack**: #engineering-practices
 - **GitHub**: Create issue with "version-control" label
-- **Email**: engineering-practices@company.com
-
 ---
-
-**Practice Owner**: [@tech-lead]  
 **Last Updated**: 2025-06-10  
 **Next Review**: 2025-09-10
