@@ -416,5 +416,5 @@ module.exports = {
 - [Google Style Guides](https://google.github.io/styleguide/)
 
 ### Submit Feedback
-- **GitHub**: Create issue with "ci-cd" label
+- **GitHub**: Create issue with "code-quality" label
 ---
