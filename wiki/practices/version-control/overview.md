@@ -395,26 +395,15 @@ git commit --amend -m "fix(auth): correct typo in validation message"
 git reset --soft HEAD~1
 ```
 
-## Related Documentation
-
+## Support & Resources
+### External Resources
 - [Code Quality Standards](../code-quality/overview.md)
 - [CI/CD Pipeline Integration](../ci-cd/overview.md)
 - [Pull Request Templates](../../templates/pull-requests/)
 - [Development Workflow Guide](../../guides/quick-start/new-developer.md)
 
-## Team Feedback
-
-### Recent Feedback (@parseen254 - 2025-06-10)
-**Pain Points:**
-- Need commit message automation
-- PR templates too generic
-
-**Suggestions:**
-- Use Conventional Commits spec ✅ Implemented
-- Stack-specific PR templates ✅ Created
-
 ### Submit Feedback
 - **GitHub**: Create issue with "version-control" label
 ---
-**Last Updated**: 2025-06-10  
+**Last Updated**: 2025-06-13
 **Next Review**: 2025-09-10
